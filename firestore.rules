@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidSavedTranslation(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.sourceLang is string && data.sourceLang.size() >= 1 && data.sourceLang.size() <= 60 &&
+             data.targetLang is string && data.targetLang.size() >= 1 && data.targetLang.size() <= 60 &&
+             data.targetCode is string && data.targetCode.size() >= 1 && data.targetCode.size() <= 10 &&
+             data.targetScript is string && data.targetScript.size() >= 1 && data.targetScript.size() <= 60 &&
+             data.sourceText is string && data.sourceText.size() >= 1 && data.sourceText.size() <= 2000 &&
+             data.translatedText is string && data.translatedText.size() >= 1 && data.translatedText.size() <= 4000 &&
+             data.phoneticGuide is string && data.phoneticGuide.size() <= 2000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCategory(cat) {
+      return cat in ['GENERAL', 'SIGN_OCR', 'DOCUMENT', 'TRAVEL', 'SHOPPING', 'HEALTH', 'LANGUAGE'];
+    }
+
+    function isValidSourceType(src) {
+      return src in ['TEXT', 'PHOTO', 'CAMERA', 'FILE'];
+    }
+
+    function isValidCollectedItem(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 4000 &&
+             data.extractedFacts is list && data.extractedFacts.size() <= 12 &&
+             (data.extractedFacts.size() == 0 || data.extractedFacts[0] is string) &&
+             data.sourceType is string && isValidSourceType(data.sourceType) &&
+             data.sourcePrompt is string && data.sourcePrompt.size() <= 2000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidChatMessage(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.role is string && data.role in ['USER', 'ASSISTANT'] &&
+             data.text is string && data.text.size() >= 1 && data.text.size() <= 8000 &&
+             data.hasPhoto is bool &&
+             (!('photoCaption' in data) || (data.photoCaption is string && data.photoCaption.size() <= 300)) &&
+             (!('extractedTitle' in data) || (data.extractedTitle is string && data.extractedTitle.size() <= 160)) &&
+             (!('extractedCategory' in data) || (data.extractedCategory is string && isValidCategory(data.extractedCategory))) &&
+             (!('extractedSummary' in data) || (data.extractedSummary is string && data.extractedSummary.size() <= 4000)) &&
+             (!('extractedFacts' in data) || (
+               data.extractedFacts is list &&
+               data.extractedFacts.size() <= 12 &&
+               (data.extractedFacts.size() == 0 || data.extractedFacts[0] is string)
+             )) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      match /saved_translations/{translationId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(translationId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(translationId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll([
+                           'userId', 'sourceLang', 'targetLang', 'targetCode',
+                           'targetScript', 'sourceText', 'translatedText',
+                           'phoneticGuide', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'sourceLang', 'targetLang', 'targetCode',
+                           'targetScript', 'sourceText', 'translatedText',
+                           'phoneticGuide', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidSavedTranslation(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(translationId) &&
+                         isValidSavedTranslation(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'sourceLang', 'targetLang', 'targetCode',
+                           'targetScript', 'sourceText', 'translatedText',
+                           'phoneticGuide', 'updatedAt'
+                         ]);
+      }
+
+      match /collected_items/{itemId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(itemId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(itemId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll([
+                           'userId', 'title', 'category', 'summary',
+                           'extractedFacts', 'sourceType', 'sourcePrompt',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'title', 'category', 'summary',
+                           'extractedFacts', 'sourceType', 'sourcePrompt',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidCollectedItem(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(itemId) &&
+                         isValidCollectedItem(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'category', 'summary', 'extractedFacts', 'updatedAt'
+                         ]);
+      }
+
+      match /chat_messages/{messageId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(messageId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(messageId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll([
+                           'userId', 'role', 'text', 'hasPhoto', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'role', 'text', 'hasPhoto', 'photoCaption',
+                           'extractedTitle', 'extractedCategory', 'extractedSummary',
+                           'extractedFacts', 'createdAt'
+                         ]) &&
+                         isValidChatMessage(incoming());
+
+        allow update: if false;
+      }
+    }
+  }
+}

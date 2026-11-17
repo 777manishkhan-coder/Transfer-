@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">BolIndia</string>
+    <string name="badge_one_to_one">ONE-TO-ONE</string>
+    <string name="badge_offline_ready">Offline Ready</string>
+    <string name="cd_engine_settings">Engine Settings</string>
+    <string name="cd_user_profile">User Profile</string>
+    <string name="cd_swap_languages">Swap source and target language</string>
+    <string name="cd_clear_input">Clear input text</string>
+    <string name="cd_copy_result">Copy translated text</string>
+    <string name="cd_share_result">Share translation</string>
+    <string name="cd_save_result">Save to favorites</string>
+    <string name="cd_fullscreen_result">Fullscreen display</string>
+    <string name="cd_attach_photo">Attach photo from gallery</string>
+    <string name="cd_capture_camera">Capture photo with camera</string>
+    <string name="cd_send_message">Send message</string>
+    <string name="search_placeholder">Search Indic words, phrases, idioms...</string>
+    <string name="source_placeholder">Type, speak, or paste any Indic text...</string>
+    <string name="default_source_sample">Where can I find safe drinking water and food here?</string>
+    <string name="nav_translate">Translate</string>
+    <string name="nav_ai_collect">AI Collect</string>
+    <string name="nav_vault">Vault</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign Out</string>
+</resources>

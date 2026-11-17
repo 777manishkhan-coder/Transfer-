@@ -1,0 +1,199 @@
+{
+  "entities": {
+    "SavedTranslation": {
+      "title": "Saved Translation",
+      "description": "A bookmarked one-to-one Indic translation with phonetic guide.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID owning this translation."
+        },
+        "sourceLang": {
+          "type": "string",
+          "description": "Source language display name."
+        },
+        "targetLang": {
+          "type": "string",
+          "description": "Target language display name."
+        },
+        "targetCode": {
+          "type": "string",
+          "description": "Short uppercase language badge code (e.g. HI, TA)."
+        },
+        "targetScript": {
+          "type": "string",
+          "description": "Script name (e.g. Devanagari)."
+        },
+        "sourceText": {
+          "type": "string",
+          "description": "Original input text."
+        },
+        "translatedText": {
+          "type": "string",
+          "description": "Translated target-language text."
+        },
+        "phoneticGuide": {
+          "type": "string",
+          "description": "Phonetic Latin/English pronunciation guide."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when saved (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "sourceLang",
+        "targetLang",
+        "targetCode",
+        "targetScript",
+        "sourceText",
+        "translatedText",
+        "phoneticGuide",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CollectedInfoItem": {
+      "title": "Collected Information Item",
+      "description": "Structured information collected via the AI chatbot from text, photos, or scanned signs.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID owning this collected record."
+        },
+        "title": {
+          "type": "string",
+          "description": "Concise title of the collected information."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["GENERAL", "SIGN_OCR", "DOCUMENT", "TRAVEL", "SHOPPING", "HEALTH", "LANGUAGE"],
+          "description": "Category tag for organizing collected information."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Detailed summary extracted by the AI chatbot."
+        },
+        "extractedFacts": {
+          "type": "array",
+          "description": "Up to 12 bullet facts extracted from the text or photo."
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["TEXT", "PHOTO", "CAMERA", "FILE"],
+          "description": "Input modality used to collect the information."
+        },
+        "sourcePrompt": {
+          "type": "string",
+          "description": "Original user prompt or note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when collected (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "category",
+        "summary",
+        "extractedFacts",
+        "sourceType",
+        "sourcePrompt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "AI Chat Message",
+      "description": "A turn in the multimodal AI chatbot conversation.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase user UID owning this message."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["USER", "ASSISTANT"],
+          "description": "Sender role."
+        },
+        "text": {
+          "type": "string",
+          "description": "Message body."
+        },
+        "hasPhoto": {
+          "type": "boolean",
+          "description": "Whether a photo was attached to this turn."
+        },
+        "photoCaption": {
+          "type": "string",
+          "description": "Optional brief description of the attached photo."
+        },
+        "extractedTitle": {
+          "type": "string",
+          "description": "Optional extracted card title for saving to Collected Info."
+        },
+        "extractedCategory": {
+          "type": "string",
+          "description": "Optional extracted category."
+        },
+        "extractedSummary": {
+          "type": "string",
+          "description": "Optional extracted summary."
+        },
+        "extractedFacts": {
+          "type": "array",
+          "description": "Optional list of extracted key facts (max 12)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "role",
+        "text",
+        "hasPhoto",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/saved_translations/{translationId}": {
+      "schema": {
+        "$ref": "#/entities/SavedTranslation"
+      },
+      "description": "Per-user bookmarked Indic translations."
+    },
+    "/users/{userId}/collected_items/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/CollectedInfoItem"
+      },
+      "description": "Per-user collected knowledge cards extracted via AI chatbot text and photos."
+    },
+    "/users/{userId}/chat_messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/ChatMessage"
+      },
+      "description": "Per-user multimodal AI chatbot message history."
+    }
+  }
+}

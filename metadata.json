@@ -1,0 +1,6 @@
+{
+  "name": "BolIndia",
+  "description": "One-to-one Indic language translator with phonetic guides, OCR/file translation, deep lexicon tools, and a multimodal AI chatbot to collect information from text and photos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
